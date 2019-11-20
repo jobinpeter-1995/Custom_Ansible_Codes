@@ -1,5 +1,5 @@
 ---
-  - name: "EC2 Creation"
+  - name: " EC2 Creation "
     hosts: localhost
 
     vars:
