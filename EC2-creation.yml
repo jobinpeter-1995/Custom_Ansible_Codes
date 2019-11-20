@@ -1,0 +1,82 @@
+```
+---
+  - name: "LoadBalancer Creation"
+    hosts: localhost
+
+    vars:
+      debug_enabled: false
+      key_pair: ec2_key
+      region: us-east-2
+      sgroup: sec_ec2
+      instance_type: t2.micro
+      ami_id: ami-0d8f6eb4f641ef691
+      ami_user: ec2-user
+      
+    tasks:
+
+      - name: " EC2 -  KeyPair Generation "
+        ec2_key:
+          region: "{{ region }}"
+          name: "{{ key_pair }}"
+        register: key_out
+      
+      - debug: var=key_out
+        when: debug_enabled  
+        
+      - name: "EC2 - KeyPair Saving"
+        copy: 
+          content: "{{ key_out.key.private_key}}"
+          dest: "{{ key_pair }}.pub"
+          mode: "0400"
+        when: key_out.changed
+        
+        
+      - name: "EC2 - SecurityGroup Creation"
+        ec2_group:
+          name: "{{ sgroup }}"
+          description: "Security Group For Newwly Created EC2"
+          region: "{{ region }}"
+          rules:
+            - proto: tcp
+              from_port: 80
+              to_port: 80
+              cidr_ip: 0.0.0.0/0
+              
+            - proto: tcp
+              from_port: 22
+              to_port: 22
+              cidr_ip: 0.0.0.0/0
+              
+            - proto: tcp
+              from_port: 443
+              to_port: 443
+              cidr_ip: 0.0.0.0/0 
+              
+          rules_egress:
+            - proto: all
+              cidr_ip: 0.0.0.0/0 
+
+      - name: "EC2 - Creation"
+        ec2:
+          instance_type: "{{instance_type}}"
+          key_name: "{{key_pair}}"
+          image: "{{ami_id}}"
+          region: "{{region}}"
+          group: "{{sgroup}}"
+          wait: yes
+          count_tag:
+            Name: "Ansible_ec2"
+          instance_tags:
+            Name: "Ansible_ec2"
+          exact_count: 2
+        register: ec2_out 
+       
+      - debug: var=ec2_out
+        when: debug_enabled
+        
+        
+      - debug: var=item.public_ip
+        with_items:
+          - "{{ ec2_out.tagged_instances }}"
+        when: debug_enabled  
+```      
