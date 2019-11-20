@@ -1,0 +1,25 @@
+```
+---
+
+- name: " KeyPair Generation "
+  hosts: localhost
+  vars:
+    - key_name: aws_key
+      region: us-east-2
+
+  tasks:
+    - name: " KeyPair creation " 
+      ec2_key:
+        name: "{{ key_name }}"
+        region: "{{ region }}"
+        state: present
+      register: key_out
+
+    - name: " KeyPair Saving "
+      copy:
+        content: "{{ key_out.key.private_key }}"
+        dest: "{{ key_name}}.pem"
+        mode: "0400"
+      when: key_out.changed
+
+```      
