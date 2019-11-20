@@ -1,6 +1,5 @@
-```
 ---
-  - name: "LoadBalancer Creation"
+  - name: "EC2 Creation"
     hosts: localhost
 
     vars:
@@ -78,5 +77,4 @@
       - debug: var=item.public_ip
         with_items:
           - "{{ ec2_out.tagged_instances }}"
-        when: debug_enabled  
-```      
+        when: debug_enabled        
